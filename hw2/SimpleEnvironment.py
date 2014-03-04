@@ -38,7 +38,9 @@ class SimpleEnvironment(object):
         # TODO: Implement a function which computes the distance between
         # two configurations
         #
-        pass
+        sconfig = numpy.array(start_config)
+        econfig = numpy.array(end_config)
+        return numpy.linalg.norm(econfig - sconfig)
 
     def Extend(self, start_config, end_config):
         
