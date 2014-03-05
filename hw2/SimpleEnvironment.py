@@ -30,7 +30,18 @@ class SimpleEnvironment(object):
         #
         # TODO: Generate and return a random configuration
         #
+        # try at most 100 times to find one random collision free config
+        for n in xrange(100):
+            x = numpy.random.uniform(lower_limits[0], upper_limits[0])
+            y = numpy.random.uniform(lower_limits[1], upper_limits[1])
+            config = [x, y]
+            robot_pose = numpy.eye(4)
+            robot_pose[:2, 3] = config
+            self.robot.SetTransform(robot_pose)
+            if not self.robot.GetEnv().CheckCollision(self.robot):
+                return numpy.array(config)
         
+        # +++++ need to return some error +++++
         return numpy.array(config)
 
     def ComputeDistance(self, start_config, end_config):
