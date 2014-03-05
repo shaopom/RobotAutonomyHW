@@ -30,18 +30,26 @@ class SimpleEnvironment(object):
         #
         # TODO: Generate and return a random configuration
         #
+
         # try at most 100 times to find one random collision free config
         for n in xrange(100):
+            
+            # get uniform sampling in 2D configuration space
             x = numpy.random.uniform(lower_limits[0], upper_limits[0])
             y = numpy.random.uniform(lower_limits[1], upper_limits[1])
             config = [x, y]
+
+            # transform robot to that config in 6D (x,y,z,r,p,y) space
+            # only set the x and y in that 4 by 4 transform matrix
             robot_pose = numpy.eye(4)
             robot_pose[:2, 3] = config
             self.robot.SetTransform(robot_pose)
+
+            # if this 2D random config sampling is collision free, then return this 2D config
             if not self.robot.GetEnv().CheckCollision(self.robot):
                 return numpy.array(config)
         
-        # +++++ need to return some error +++++
+        # +++++ need to return some error +++++ please make a decision!
         return numpy.array(config)
 
     def ComputeDistance(self, start_config, end_config):
