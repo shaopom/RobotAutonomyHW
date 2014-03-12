@@ -27,17 +27,17 @@ class SimpleEnvironment(object):
     def GenerateRandomConfiguration(self):
         config = [0] * 2;
         lower_limits, upper_limits = self.boundary_limits
-        #
-        # TODO: Generate and return a random configuration
-        #
+
+        # Save robot current transform
+        init_transform = self.robot.GetTransform()
+        res = init_transform[:2, 3]
 
         # try at most 100 times to find one random collision free config
+        xs = numpy.random.uniform(lower_limits[0], upper_limits[0], 100)
+        ys = numpy.random.uniform(lower_limits[1], upper_limits[1], 100)
         for n in xrange(100):
-            
             # get uniform sampling in 2D configuration space
-            x = numpy.random.uniform(lower_limits[0], upper_limits[0])
-            y = numpy.random.uniform(lower_limits[1], upper_limits[1])
-            config = [x, y]
+            config = [xs[n], ys[n]]
 
             # transform robot to that config in 6D (x,y,z,r,p,y) space
             # only set the x and y in that 4 by 4 transform matrix
@@ -47,10 +47,15 @@ class SimpleEnvironment(object):
 
             # if this 2D random config sampling is collision free, then return this 2D config
             if not self.robot.GetEnv().CheckCollision(self.robot):
-                return numpy.array(config)
-        
-        # +++++ need to return some error +++++ please make a decision!
-        return numpy.array(config)
+                res = numpy.array(config)
+                break
+
+        # Restore robot transform
+        self.robot.SetTransform(init_transform)
+
+        # Return found random configuration
+        # If no collision-free configuration found, then return robots position
+        return res
 
     def ComputeDistance(self, start_config, end_config):
         #
