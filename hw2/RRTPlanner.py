@@ -18,8 +18,60 @@ class RRTPlanner(object):
         #  The return path should be an array
         #  of dimension k x n where k is the number of waypoints
         #  and n is the dimension of the robots configuration space
+
+        # start the Forward RRT algorithm
+        # set up the number of iterations we want to try before we give up
+        num_iter = 1000
+        # set up the probability to generate goal config
+        prob_goal = 0.2
+
+        # if it suceeeds to connect the goal, make isFail = False
+        isFail = True
+        import random
+        import time
+        for i in range(num_iter):
+            # generate random configuration, config_q
+            prob = random.random()
+            if prob < prob_goal:
+                config_q = numpy.copy(goal_config)
+            else:
+                config_q = self.planning_env.GenerateRandomConfiguration()
+            
+            # get the nearest neighbor from the Tree, based on config_q
+            mid, mdist = tree.GetNearestVertex(config_q)
+            # get the nearest neighbor, config_m
+            config_m = tree.vertices[mid]
+            # append config_n to the tree if config_n is addable
+            # where config_n is the extended node between config_m and config_q
+            # in our case, if it is extendable, config_n always equals to config_q
+            config_n = self.planning_env.Extend(config_m, config_q)
+            if numpy.array_equal(config_n, config_m):
+                continue
+            else:
+                tree.AddVertex(config_n)
+                tree.AddEdge(mid,len(tree.vertices)-1) # id of config_n is the last one in vertices
+                # draw the expended edge
+                self.planning_env.PlotEdge(config_m, config_n)      
+
+            # check if config_n equals to goal_config, if yes, break
+            if numpy.array_equal(config_n, goal_config):
+                isFail = False
+                goal_id = len(tree.vertices)-1
+                break
+
+        # recursive append the waypoints to the tree based on the tree.edges information
+        # stop if we trace back to root, id = 0
+        # start here
+        if isFail:
+            return None
+        else:
+            current_id = goal_id
+            while current_id != 0:
+                plan.append(tree.vertices[current_id])
+                current_id = tree.edges[current_id]
+            plan.append(tree.vertices[current_id]) # add start config to the plan
         
-        plan.append(start_config)
-        plan.append(goal_config)
-        
+        # reverse the order of plan
+            plan = plan[::-1]
+            
         return plan

@@ -23,10 +23,8 @@ def main(robot, planning_env, planner):
     plan = planner.Plan(start_config, goal_config)
     plan_short = planning_env.ShortenPath(plan)
     traj = robot.ConvertPlanToTrajectory(plan_short)
-
+    
     # for debugging before the execution
-    import IPython
-    IPython.embed()
     robot.ExecuteTrajectory(traj)
 
 if __name__ == "__main__":
@@ -80,9 +78,3 @@ if __name__ == "__main__":
         exit(0)
 
     main(robot, planning_env, planner)
-
-    import IPython
-    IPython.embed()
-
-        
-    

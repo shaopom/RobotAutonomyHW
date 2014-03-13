@@ -5,6 +5,7 @@ class SimpleEnvironment(object):
     
     def __init__(self, herb):
         self.robot = herb.robot
+        self.env = self.robot.GetEnv()
         self.boundary_limits = [[-5., -5.], [5., 5.]]
 
         # add an obstacle
@@ -46,8 +47,8 @@ class SimpleEnvironment(object):
             self.robot.SetTransform(robot_pose)
 
             # if this 2D random config sampling is collision free, then return this 2D config
-            if not self.robot.GetEnv().CheckCollision(self.robot):
-                res = numpy.array(config)
+            if not self.env.CheckCollision(self.robot):
+                res = config
                 break
 
         # Restore robot transform
@@ -55,7 +56,7 @@ class SimpleEnvironment(object):
 
         # Return found random configuration
         # If no collision-free configuration found, then return robots position
-        return res
+        return numpy.array(res)
 
     def ComputeDistance(self, start_config, end_config):
         #
@@ -72,7 +73,58 @@ class SimpleEnvironment(object):
         # TODO: Implement a function which attempts to extend from 
         #   a start configuration to a goal configuration
         #
-        pass
+
+        #original transform
+        orig_T = self.robot.GetTransform()
+
+        # get the boundaries limits
+        lower_limits, upper_limits = self.boundary_limits
+
+        # unit distance between checking points
+        # unit_dist = 0.02 #meters
+        
+        # number of checking points between start point and end point
+        # num_points = numpy.floor(self.ComputeDistance(start_config, end_config)/unit_dist)
+
+        config_increment = (end_config - start_config)/500
+
+        check_config = start_config
+
+        # check all the checking points
+        for i in xrange(500):
+            # check_config is the interpolation point of the start_config and end_config
+            # based on the current check point
+            check_config = start_config + config_increment * (i + 1)
+
+            # check if the check_config is outside the boundaries
+            if check_config[0] < lower_limits[0] or check_config[0] > upper_limits[0]:
+                return check_config - config_increment
+            if check_config[1] < lower_limits[1] or check_config[1] > upper_limits[1]:
+                return check_config - config_increment
+
+            # get the translation matrix based on the check_config
+            T = numpy.array([[1, 0, 0, check_config[0]], 
+                            [0, 1, 0, check_config[1]], 
+                            [0, 0, 1, 0], 
+                            [0, 0, 0, 1]])
+            
+            # always lock the environment first if you want to change the robot configuration
+            with self.env:
+                # set the robot to the new transfomation check_config to see whether it collides with
+                # all the obstacles
+                self.robot.SetTransform(T)
+
+            # check whether the robot at checking points collides with the obstacles
+            # run through all the obstacles
+            if self.env.CheckCollision(self.robot):
+                with self.env:
+                    self.robot.SetTransform(orig_T)         
+                return check_config - config_increment
+        
+        with self.env:       
+            self.robot.SetTransform(orig_T)
+
+        return check_config
 
     def ShortenPath(self, path, timeout=5.0):
         
