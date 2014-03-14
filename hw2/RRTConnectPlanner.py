@@ -53,13 +53,13 @@ class RRTConnectPlanner(object):
 			ftree.AddVertex(f_config_n)
                         ftree.AddEdge(f_mid,len(ftree.vertices)-1) # id of config_n is the last one in vertices
                         # draw the expended edge
-                        self.planning_env.PlotEdge(f_config_m, f_config_n)
+                        # self.planning_env.PlotEdge(f_config_m, f_config_n)
 		# add r_config_n to rtree if addable
 		if r_config_n != None:
                         rtree.AddVertex(r_config_n)
                         rtree.AddEdge(r_mid,len(rtree.vertices)-1) # id of config_n is the last one in vertices
                         # draw the expended edge
-                        self.planning_env.PlotEdge(r_config_m, r_config_n)
+                        # self.planning_env.PlotEdge(r_config_m, r_config_n)
 		# break the loop if ftree and rtree connected
                 if numpy.array_equal(f_config_n, r_config_n) and f_config_n != None and r_config_n != None:
 			isFail = False

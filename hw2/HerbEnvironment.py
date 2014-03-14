@@ -4,6 +4,7 @@ class HerbEnvironment(object):
     
     def __init__(self, herb):
         self.robot = herb.robot
+        self.env = self.robot.GetEnv()
 
         # add a table and move the robot into place
         table = self.robot.GetEnv().ReadKinBodyXMLFile('models/objects/table.kinbody.xml')
@@ -31,11 +32,39 @@ class HerbEnvironment(object):
         
 
     def GenerateRandomConfiguration(self):
-        config = [0] * len(self.robot.GetActiveDOFIndices())
-
+        activeDOFIndices = self.robot.GetActiveDOFIndices()
+        config = [0] * len(activeDOFIndices)
+        
         #
         # TODO: Generate and return a random configuration
         #
+
+        lower_limits, upper_limits = self.robot.GetActiveDOFLimits()
+
+        # Save robot current configuration
+        init_config = self.robot.GetActiveDOFValues()
+        config = init_config
+        samples = []
+        
+        # try at most 100 times to find one random collision free config
+        # Samples is a DOF by 100 matrix. Each row is one joint value with 100 samples.
+        for i in xrange(len(activeDOFIndices)):
+            samples.append(numpy.random.uniform(lower_limits[i], upper_limits[i], 100))
+        
+        for n in xrange(100):
+            # get the nth column in the samples matrix
+            config = [sample[n] for sample in samples]
+
+            self.robot.SetDOFValues(config, activeDOFIndices)
+
+            if not self.env.CheckCollision(self.robot):
+                break
+        # Restore robot transform
+        self.robot.SetDOFValues(init_config, activeDOFIndices)
+
+        # Return found random configuration
+        # If no collision-free configuration found, then return robots position
+
         return numpy.array(config)
 
 
@@ -46,7 +75,9 @@ class HerbEnvironment(object):
         # TODO: Implement a function which computes the distance between
         # two configurations
         #
-        pass
+        sconfig = numpy.array(start_config)
+        econfig = numpy.array(end_config)
+        return numpy.linalg.norm(econfig - sconfig)
 
 
     def Extend(self, start_config, end_config):
@@ -55,7 +86,41 @@ class HerbEnvironment(object):
         # TODO: Implement a function which attempts to extend from 
         #   a start configuration to a goal configuration
         #
-        pass
+        activeDOFIndices = self.robot.GetActiveDOFIndices()
+
+        config_increment = (end_config - start_config)/500
+
+        check_config = start_config
+
+        lower_limits, upper_limits = self.robot.GetActiveDOFLimits()
+
+        # check all the checking points
+        for i in xrange(500):
+            # check_config is the interpolation point of the start_config and end_config
+            # based on the current check point
+            check_config = start_config + config_increment * (i + 1)
+
+            # if check_config is out of DOF limits, then return the last successful check_config
+            for n in xrange(len(check_config)):
+                if check_config[n] < lower_limits[n] or check_config[n] > upper_limits[n]:
+                    self.robot.SetDOFValues(start_config, activeDOFIndices)
+                    return check_config - config_increment
+            
+            # always lock the environment first if you want to change the robot configuration
+            with self.env:
+                # set the robot to the new transfomation check_config to see whether it collides with
+                # all the obstacles
+                self.robot.SetDOFValues(check_config, activeDOFIndices)
+
+            if self.env.CheckCollision(self.robot):
+                with self.env:
+                    self.robot.SetDOFValues(start_config, activeDOFIndices)
+                return check_config - config_increment
+        
+        with self.env:       
+            self.robot.SetDOFValues(start_config, activeDOFIndices)
+
+        return check_config
         
     def ShortenPath(self, path, timeout=5.0):
         

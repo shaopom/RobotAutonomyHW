@@ -51,7 +51,7 @@ class RRTPlanner(object):
                 tree.AddVertex(config_n)
                 tree.AddEdge(mid,len(tree.vertices)-1) # id of config_n is the last one in vertices
                 # draw the expended edge
-                self.planning_env.PlotEdge(config_m, config_n)      
+                # self.planning_env.PlotEdge(config_m, config_n)      
 
             # check if config_n equals to goal_config, if yes, break
             if numpy.array_equal(config_n, goal_config):

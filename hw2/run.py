@@ -20,6 +20,9 @@ def main(robot, planning_env, planner):
     else:
         goal_config = numpy.array([2.0, 0.0])
 
+    # import IPython
+    # IPython.embed()
+
     plan = planner.Plan(start_config, goal_config)
     plan_short = planning_env.ShortenPath(plan)
     traj = robot.ConvertPlanToTrajectory(plan_short)
@@ -78,3 +81,5 @@ if __name__ == "__main__":
         exit(0)
 
     main(robot, planning_env, planner)
+
+    xxx = raw_input("Type any button to exit!")
