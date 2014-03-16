@@ -44,7 +44,8 @@ class SimpleEnvironment(object):
             # only set the x and y in that 4 by 4 transform matrix
             robot_pose = numpy.eye(4)
             robot_pose[:2, 3] = config
-            self.robot.SetTransform(robot_pose)
+            with self.env:
+                self.robot.SetTransform(robot_pose)
 
             # if this 2D random config sampling is collision free, then return this 2D config
             if not self.env.CheckCollision(self.robot):
@@ -52,7 +53,8 @@ class SimpleEnvironment(object):
                 break
 
         # Restore robot transform
-        self.robot.SetTransform(init_transform)
+        with self.env:
+            self.robot.SetTransform(init_transform)
 
         # Return found random configuration
         # If no collision-free configuration found, then return robots position
