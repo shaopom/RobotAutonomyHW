@@ -43,7 +43,7 @@ class HerbEnvironment(object):
 
         # Save robot current configuration
         init_config = self.robot.GetActiveDOFValues()
-        config = init_config
+        res = init_config
         samples = []
         
         # try at most 100 times to find one random collision free config
@@ -58,6 +58,7 @@ class HerbEnvironment(object):
             self.robot.SetDOFValues(config, activeDOFIndices)
 
             if not self.env.CheckCollision(self.robot):
+                res = config
                 break
         # Restore robot transform
         self.robot.SetDOFValues(init_config, activeDOFIndices)
@@ -65,7 +66,7 @@ class HerbEnvironment(object):
         # Return found random configuration
         # If no collision-free configuration found, then return robots position
 
-        return numpy.array(config)
+        return numpy.array(res)
 
 
     
