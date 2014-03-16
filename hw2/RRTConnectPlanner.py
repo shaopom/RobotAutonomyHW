@@ -49,19 +49,19 @@ class RRTConnectPlanner(object):
 		r_config_n = self.planning_env.Extend(r_config_m,config_q)
 		
 		# add f_config_n to ftree if addable
-		if f_config_n != None:
+		if not numpy.array_equal(f_config_n, f_config_m):
 			ftree.AddVertex(f_config_n)
                         ftree.AddEdge(f_mid,len(ftree.vertices)-1) # id of config_n is the last one in vertices
                         # draw the expended edge
                         # self.planning_env.PlotEdge(f_config_m, f_config_n)
 		# add r_config_n to rtree if addable
-		if r_config_n != None:
+		if not numpy.array_equal(r_config_n, r_config_m):
                         rtree.AddVertex(r_config_n)
                         rtree.AddEdge(r_mid,len(rtree.vertices)-1) # id of config_n is the last one in vertices
                         # draw the expended edge
                         # self.planning_env.PlotEdge(r_config_m, r_config_n)
 		# break the loop if ftree and rtree connected
-                if numpy.array_equal(f_config_n, r_config_n) and f_config_n != None and r_config_n != None:
+                if numpy.array_equal(f_config_n, r_config_n) and not numpy.array_equal(f_config_n, f_config_m) and not numpy.array_equal(r_config_n, r_config_m):
 			isFail = False
 			f_goal_id = len(ftree.vertices)-1
 			r_goal_id = len(rtree.vertices)-1
@@ -73,7 +73,7 @@ class RRTConnectPlanner(object):
 
         # start here
         if isFail:
-                return None
+                return []
         else:
 		# start to append waypoints from ftree
                 current_id = f_goal_id
@@ -91,6 +91,3 @@ class RRTConnectPlanner(object):
                 plan.append(rtree.vertices[current_id]) # add goal config to the plan		
 	
         return plan
-
-
-
