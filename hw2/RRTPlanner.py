@@ -29,7 +29,7 @@ class RRTPlanner(object):
         isFail = True
         import random
         import time
-        for i in range(num_iter):
+        for i in xrange(num_iter):
             # generate random configuration, config_q
             prob = random.random()
             if prob < prob_goal:
@@ -63,7 +63,7 @@ class RRTPlanner(object):
         # stop if we trace back to root, id = 0
         # start here
         if isFail:
-            return None
+            return []
         else:
             current_id = goal_id
             while current_id != 0:
