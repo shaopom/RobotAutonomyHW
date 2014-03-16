@@ -55,13 +55,15 @@ class HerbEnvironment(object):
             # get the nth column in the samples matrix
             config = [sample[n] for sample in samples]
 
-            self.robot.SetDOFValues(config, activeDOFIndices)
+            with self.env:
+                self.robot.SetDOFValues(config, activeDOFIndices)
 
             if not self.env.CheckCollision(self.robot):
                 res = config
                 break
         # Restore robot transform
-        self.robot.SetDOFValues(init_config, activeDOFIndices)
+        with self.env:
+            self.robot.SetDOFValues(init_config, activeDOFIndices)
 
         # Return found random configuration
         # If no collision-free configuration found, then return robots position
@@ -104,7 +106,8 @@ class HerbEnvironment(object):
             # if check_config is out of DOF limits, then return the last successful check_config
             for n in xrange(len(check_config)):
                 if check_config[n] < lower_limits[n] or check_config[n] > upper_limits[n]:
-                    self.robot.SetDOFValues(start_config, activeDOFIndices)
+                    with self.env:
+                        self.robot.SetDOFValues(start_config, activeDOFIndices)
                     return check_config - config_increment
             
             # always lock the environment first if you want to change the robot configuration
